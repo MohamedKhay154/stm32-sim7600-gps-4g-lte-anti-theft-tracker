@@ -101,6 +101,8 @@ Core/
 
 `log.h` contains an overridden version of the `printf` function used for logging general information, errors, and communication between the STM32 and the SIM7600E module for debugging purposes.
 
+### Example of the logging interface during the TRACKING state.
+![log](docs/scrennshots/development/tracking.png)
 
 
 ---
@@ -138,12 +140,18 @@ For example, new subtasks, events, or operating modes can be added more easily. 
 
 ---
 # Node-Red
-
+![Flow](docs/scrennshots/development/node_red_flow.png)
 Node-RED is widely used in IoT and network-related applications, and it supports the MQTT protocol natively. In addition, it is very easy to use and implement thanks to its drag-and-drop interface and simple JavaScript programming.
 
 Node-RED subscribes to the same MQTT topic used by the SIM7600E module, receives the GPS position data, and then sends it as JSON data to a world map dashboard for visualization.
 
 I also added support for different operating modes because each mode requires a specific type of visualization. For example, in TRACK mode, the system displays the traveled path, while in PARK mode, it creates a circular geofence around the parked position. The different visualizations are shown in the following pictures.
+
+<p align="center">
+  <img src="docs/scrennshots/development/where.png" width="45%">
+  <img src="docs/scrennshots/development/park.png" width="45%">
+</p>
+
 
 ---
 

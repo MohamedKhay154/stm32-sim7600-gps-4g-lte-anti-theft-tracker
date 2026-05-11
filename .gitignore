@@ -1,5 +1,7 @@
 Debug/
 Release/
+Startup/
+SIM7600E-backups/
 
 .settings/
 .metadata/

@@ -1,0 +1,709 @@
+[
+    {
+        "id": "b79d78232292bda9",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "5d4641b04392e021",
+        "type": "ui_worldmap",
+        "z": "b79d78232292bda9",
+        "group": "2a5a4f718cf07328",
+        "order": 1,
+        "width": "0",
+        "height": "0",
+        "name": "Location",
+        "lat": "",
+        "lon": "",
+        "zoom": "",
+        "layer": "OSMG",
+        "cluster": "",
+        "maxage": "",
+        "usermenu": "hide",
+        "layers": "show",
+        "panit": "true",
+        "panlock": "false",
+        "zoomlock": "false",
+        "hiderightclick": "true",
+        "coords": "none",
+        "showgrid": "false",
+        "showruler": "false",
+        "allowFileDrop": "false",
+        "path": "/worldmap",
+        "overlist": "DR,CO,RA,DN,HM",
+        "maplist": "OSMG,OSMC,EsriC,EsriS,EsriT,EsriDG,UKOS",
+        "mapname": "",
+        "mapurl": "",
+        "mapopt": "",
+        "mapwms": false,
+        "x": 920,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "22332aeff0abcfec",
+        "type": "mqtt in",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "topic": "gps/location",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "fe6c0b770c496e2d",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 110,
+        "y": 260,
+        "wires": [
+            [
+                "f2c3b3ece059aefa",
+                "f293c9140278359c"
+            ]
+        ]
+    },
+    {
+        "id": "08ec3686ca3622bd",
+        "type": "function",
+        "z": "b79d78232292bda9",
+        "name": "Tracker",
+        "func": "\n// Split the string into latitude and longitude\nlet parts = msg.payload.split(\",\");\n\n// Convert strings to floats\nlet lat = parseFloat(parts[0]);\nlet lon = parseFloat(parts[1]);\n\n// Create map-friendly object\nmsg.payload = {\n    name: \"Tracker\",\n    lat: lat,\n    lon: lon,\n    layer: \"layer1\"\n};\n\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 140,
+        "wires": [
+            [
+                "5d4641b04392e021"
+            ]
+        ]
+    },
+    {
+        "id": "1491c591053eeb55",
+        "type": "mqtt out",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "topic": "test/node-red",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "fe6c0b770c496e2d",
+        "x": 690,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "b3c59cbb50626eb4",
+        "type": "ui_button",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "group": "ed1fb9d715068127",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "where?",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "          Where",
+        "payloadType": "str",
+        "topic": "test/node-red",
+        "topicType": "msg",
+        "x": 100,
+        "y": 420,
+        "wires": [
+            [
+                "1491c591053eeb55",
+                "b8acfc144ed8f08c"
+            ]
+        ]
+    },
+    {
+        "id": "d333a424f6a23f78",
+        "type": "ui_button",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "group": "ed1fb9d715068127",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Reset",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "{\"name\":\"Tracker\",\"delete\":true}",
+        "payloadType": "json",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 210,
+        "y": 60,
+        "wires": [
+            [
+                "7a482df2f2c4a626"
+            ]
+        ]
+    },
+    {
+        "id": "c4cc6b46c0340509",
+        "type": "ui_button",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "group": "ed1fb9d715068127",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "tracking",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "          track",
+        "payloadType": "str",
+        "topic": "test/node-red",
+        "topicType": "msg",
+        "x": 100,
+        "y": 620,
+        "wires": [
+            [
+                "1491c591053eeb55",
+                "f353f14bbb81cc5c"
+            ]
+        ]
+    },
+    {
+        "id": "ee3cfb0c18f7b47a",
+        "type": "ui_button",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "group": "ed1fb9d715068127",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Close Connection",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "    close",
+        "payloadType": "str",
+        "topic": "test/node-red",
+        "topicType": "msg",
+        "x": 130,
+        "y": 480,
+        "wires": [
+            [
+                "1491c591053eeb55"
+            ]
+        ]
+    },
+    {
+        "id": "7a339021f3381bd8",
+        "type": "function",
+        "z": "b79d78232292bda9",
+        "name": "Tracker + Path",
+        "func": "// ===== PARSE LAT/LON =====\nlet parts = msg.payload.split(\",\");\nlet lat = parseFloat(parts[0]);\nlet lon = parseFloat(parts[1]);\n\n// ===== CONTEXT STORAGE =====\n// Store previous path or initialize\nlet path = global.get(\"path\") || [];\n\n// Add new point to path\npath.push({ lat: lat, lon: lon });\n\n// Optional: limit path length (last 100 points)\nif (path.length > 100) {\n    path.shift();\n}\n\n// Save updated path\nglobal.set(\"path\", path);\n// ===== MARKER =====\nlet markerMsg = {\n    payload: {\n        name: \"Tracker\",\n        lat: lat,\n        lon: lon,\n        icon: \"https://cdn-icons-png.flaticon.com/512/1819/1819598.png\",\n        layer: \"layer1\"\n    }\n};\n\n// ===== PATH LINE =====\nlet pathMsg = {\n    payload: {\n        name: \"Tracker-path\",\n        line: path,\n        color: \"blue\",\n        weight: 4,\n        layer: \"layer1\"\n    }\n};\n\n// Send marker + path\nreturn [markerMsg, pathMsg];\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 220,
+        "wires": [
+            [
+                "5d4641b04392e021"
+            ],
+            [
+                "5d4641b04392e021"
+            ]
+        ]
+    },
+    {
+        "id": "e3fa29b718cdc5b7",
+        "type": "ui_button",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "group": "ed1fb9d715068127",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Stop",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "      stop",
+        "payloadType": "str",
+        "topic": "test/node-red",
+        "topicType": "msg",
+        "x": 90,
+        "y": 700,
+        "wires": [
+            [
+                "1491c591053eeb55"
+            ]
+        ]
+    },
+    {
+        "id": "fa9f6e6e47bf34ed",
+        "type": "ui_button",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "group": "ed1fb9d715068127",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Parking",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "          park",
+        "payloadType": "str",
+        "topic": "test/node-red",
+        "topicType": "msg",
+        "x": 100,
+        "y": 540,
+        "wires": [
+            [
+                "1491c591053eeb55",
+                "5214692d376adc0d"
+            ]
+        ]
+    },
+    {
+        "id": "c252b7f2d1866318",
+        "type": "function",
+        "z": "b79d78232292bda9",
+        "name": "Park",
+        "func": "// ===== PARSE LAT/LON ===== \nlet parts = msg.payload.split(\",\"); \nlet lat = parseFloat(parts[0]); \nlet lon = parseFloat(parts[1]); \n// ===== PARK SETTINGS ===== \nconst PARK_RADIUS_M = 20; \n// Save park center for later use (geofence check, redraw) \ncontext.set(\"park_lat\", lat); \ncontext.set(\"park_lon\", lon); \ncontext.set(\"park_radius\", PARK_RADIUS_M); \n// ===== GEOFENCE CIRCLE ===== \nlet circleMsg = { \n    payload: {\n         name: \"ParkZone\", \n         lat: lat, \n         lon: lon, \n         radius: PARK_RADIUS_M, \n         color: \"red\", \n         fillColor: \"red\", \n         fillOpacity: 0.2, \n         layer: \"layer1\" \n         } \n}; \nreturn circleMsg;\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 300,
+        "wires": [
+            [
+                "5d4641b04392e021"
+            ],
+            [
+                "5d4641b04392e021"
+            ]
+        ]
+    },
+    {
+        "id": "b8acfc144ed8f08c",
+        "type": "change",
+        "z": "b79d78232292bda9",
+        "name": "where mode",
+        "rules": [
+            {
+                "t": "set",
+                "p": "mode",
+                "pt": "global",
+                "to": "WHERE",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 510,
+        "y": 640,
+        "wires": [
+            [
+                "f578aeb253e61638"
+            ]
+        ]
+    },
+    {
+        "id": "f353f14bbb81cc5c",
+        "type": "change",
+        "z": "b79d78232292bda9",
+        "name": "Tracking mode",
+        "rules": [
+            {
+                "t": "set",
+                "p": "mode",
+                "pt": "global",
+                "to": "TRACK",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "path",
+                "pt": "flow",
+                "to": "[]",
+                "tot": "bin"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 520,
+        "y": 700,
+        "wires": [
+            [
+                "f578aeb253e61638"
+            ]
+        ]
+    },
+    {
+        "id": "6fa36de142acb1a3",
+        "type": "ui_text",
+        "z": "b79d78232292bda9",
+        "group": "a4df928cfab20eb4",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "mode",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 950,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "f578aeb253e61638",
+        "type": "function",
+        "z": "b79d78232292bda9",
+        "name": "function 1",
+        "func": "msg.payload = global.get(\"mode\") || \"UNDEFINED\";\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 700,
+        "wires": [
+            [
+                "6fa36de142acb1a3"
+            ]
+        ]
+    },
+    {
+        "id": "5214692d376adc0d",
+        "type": "change",
+        "z": "b79d78232292bda9",
+        "name": "Parking mode",
+        "rules": [
+            {
+                "t": "set",
+                "p": "mode",
+                "pt": "global",
+                "to": "PARK",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 520,
+        "y": 780,
+        "wires": [
+            [
+                "f578aeb253e61638"
+            ]
+        ]
+    },
+    {
+        "id": "f2c3b3ece059aefa",
+        "type": "switch",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "property": "mode",
+        "propertyType": "global",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "WHERE",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "TRACK",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "PARK",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 3,
+        "x": 350,
+        "y": 260,
+        "wires": [
+            [
+                "08ec3686ca3622bd"
+            ],
+            [
+                "7a339021f3381bd8"
+            ],
+            [
+                "c252b7f2d1866318"
+            ]
+        ]
+    },
+    {
+        "id": "7a482df2f2c4a626",
+        "type": "change",
+        "z": "b79d78232292bda9",
+        "name": "Clear Map",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.command.clear",
+                "pt": "msg",
+                "to": "layer1",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "path",
+                "pt": "global",
+                "to": "[]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 60,
+        "wires": [
+            [
+                "5d4641b04392e021"
+            ]
+        ]
+    },
+    {
+        "id": "9528e3ca5074632f",
+        "type": "ui_led",
+        "z": "b79d78232292bda9",
+        "order": 6,
+        "group": "a4df928cfab20eb4",
+        "width": 0,
+        "height": 0,
+        "label": "Connection",
+        "labelPlacement": "left",
+        "labelAlignment": "left",
+        "colorForValue": [
+            {
+                "color": "#ff0000",
+                "value": "false",
+                "valueType": "bool"
+            },
+            {
+                "color": "#008000",
+                "value": "true",
+                "valueType": "bool"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showGlow": true,
+        "name": "",
+        "x": 950,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "f293c9140278359c",
+        "type": "function",
+        "z": "b79d78232292bda9",
+        "name": "check connection",
+        "func": "// Check if we have received any message yet\nlet connected = global.get(\"mqttConnected\") || false;\n\n// If this message arrived, mark as connected\nconnected = true;\nglobal.set(\"mqttConnected\", connected);\nflow.set(\"lastMqttTime\", Date.now());\n// Prepare LED message\nmsg.payload = connected; // true → green\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 380,
+        "wires": [
+            [
+                "9528e3ca5074632f"
+            ]
+        ]
+    },
+    {
+        "id": "c6e0ddc8c2cd7c10",
+        "type": "function",
+        "z": "b79d78232292bda9",
+        "name": "check connection",
+        "func": "let lastMsg = global.get(\"lastMqttTime\") || 0;\nlet now = Date.now();\nlet timeout = 10000; // 10s\n\nlet connected = (now - lastMsg) < timeout;\nmsg.payload = connected; // true → green, false → red\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 440,
+        "wires": [
+            [
+                "9528e3ca5074632f"
+            ]
+        ]
+    },
+    {
+        "id": "4655873af4afe6e8",
+        "type": "inject",
+        "z": "b79d78232292bda9",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 270,
+        "y": 360,
+        "wires": [
+            [
+                "c6e0ddc8c2cd7c10"
+            ]
+        ]
+    },
+    {
+        "id": "2a5a4f718cf07328",
+        "type": "ui_group",
+        "name": "Location",
+        "tab": "bb299a31d0df732b",
+        "order": 1,
+        "disp": true,
+        "width": "20",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "fe6c0b770c496e2d",
+        "type": "mqtt-broker",
+        "name": "Broker",
+        "broker": "broker.emqx.io",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "ed1fb9d715068127",
+        "type": "ui_group",
+        "name": "Options",
+        "tab": "bb299a31d0df732b",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "a4df928cfab20eb4",
+        "type": "ui_group",
+        "name": "Status",
+        "tab": "bb299a31d0df732b",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "bb299a31d0df732b",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "b0dc116ab5bacb24",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-web-worldmap": "5.5.4",
+            "node-red-dashboard": "3.6.6",
+            "node-red-contrib-ui-led": "0.4.11"
+        }
+    }
+]

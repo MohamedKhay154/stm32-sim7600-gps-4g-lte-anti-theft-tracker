@@ -10,17 +10,21 @@
 
 #include "main.h"
 #include "SIM7600E.h"
-//#include "timer.h"
+#include "log.h"
+#include "timer.h"
 #include <stdint.h>
+#include <string.h>
+#include <stdio.h>
 
 /**
  * @brief Represents the different system states.
  */
 typedef enum {
-    STATE_INIT,        /**< System is idle */
+    STATE_CONNECT,        /**<  */
+	STATE_IDLE,		   /**< System is idle */
     STATE_TRACKING,    /**< GPS tracking mode */
     STATE_PARK,        /**< Park monitoring mode */
-    STATE_RECONNECT,   /**< Reconnecting to network/MQTT */
+
 } State_t;
 
 
@@ -43,7 +47,7 @@ typedef enum {
     EVENT_BTN_PARK,          /**< Park button pressed */
 
     /* Timers */
-    EVENT_TRACK_TIMER,       /**< Tracking timer event */
+    EVENT_TRACKING_TIMER,       /**< Tracking timer event */
 
     /* Sensors */
     EVENT_GEOFENCE_EXIT      /**< Vehicle left geofence */
@@ -56,8 +60,11 @@ extern State_t current_state;
 /** @brief Previous system state. */
 extern State_t previous_state;
 
-/** @brief Called when entering Init state. */
-void State_Init_Enter();
+/** @brief Called when entering Connect state. */
+void State_Connect_Enter();
+
+/** @brief Called when entering Idle state. */
+void State_Idle_Enter();
 
 /** @brief Called when entering Tracking state. */
 void State_Tracking_Enter();
@@ -65,12 +72,13 @@ void State_Tracking_Enter();
 /** @brief Called when entering Park state. */
 void State_Park_Enter();
 
-/** @brief Called when entering Reconnect state. */
-void State_Reconnect_Enter();
 
 
-/** @brief Called when leaving Init state. */
-void State_Init_Exit();
+/** @brief Called when leaving Connect state. */
+void State_Connect_Exit();
+
+/** @brief Called when leaving Idle state. */
+void State_Idle_Exit();
 
 /** @brief Called when leaving Tracking state. */
 void State_Tracking_Exit();
@@ -78,12 +86,13 @@ void State_Tracking_Exit();
 /** @brief Called when leaving Park state. */
 void State_Park_Exit();
 
-/** @brief Called when leaving Reconnect state. */
-void State_Reconnect_Exit();
 
 
-/** @brief Handles events while in Init state. */
-void State_Init_HandleEvent(Event_t ev);
+/** @brief Handles events while in Connect state. */
+void State_Connect_HandleEvent(Event_t ev);
+
+/** @brief Handles events while in Idle state. */
+void State_Idle_HandleEvent(Event_t ev);
 
 /** @brief Handles events while in Tracking state. */
 void State_Tracking_HandleEvent(Event_t ev);
@@ -91,8 +100,6 @@ void State_Tracking_HandleEvent(Event_t ev);
 /** @brief Handles events while in Park state. */
 void State_Park_HandleEvent(Event_t ev);
 
-/** @brief Handles events while in Reconnect state. */
-void State_Reconnect_HandleEvent(Event_t ev);
 
 /** @brief Changes the system from current state to a new state. */
 void Transition_To(State_t new_state);

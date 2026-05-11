@@ -60,7 +60,7 @@ bool mqtt_subscribed = false;
  */
 bool SIM_EnsurePowered() {
 	// Check if SIM already responding
-	if (SendAtCommandRetry("AT", "OK", 1)) {
+	if (SendAtCommandRetry("AT", "OK", RETRIES)) {
 		LOG_INFO("SIM already ON");
 		return true;
 	}
@@ -205,6 +205,47 @@ void SendRawText(char *cmd)
     HAL_UART_Receive_IT(sim_uart, &rx_data, 1);
     HAL_UART_Transmit(sim_uart, (uint8_t *)cmd, strlen(cmd), HAL_MAX_DELAY);
 }
+
+bool SIM_IsAlive(void)
+{
+    return SendAtCommandRetry("AT\r\n", "OK", RETRIES);
+}
+
+bool SIM_IsSimReady(void)
+{
+    return SendAtCommandRetry("AT+CPIN?\r\n",
+                              "+CPIN: READY",
+                              3);
+}
+
+bool SIM_IsNetworkRegistered(void) {
+	// Home network
+	if (SendAtCommandRetry("AT+CGREG?\r\n", "+CGREG: 0,1", RETRIES)) {
+		return true;
+	}
+
+	// Roaming network
+	if (SendAtCommandRetry("AT+CGREG?\r\n", "+CGREG: 0,5", RETRIES)) {
+		return true;
+	}
+
+	return false;
+}
+
+bool SIM_IsDataAttached(void) {
+	return SendAtCommandRetry("AT+CGATT?\r\n", "+CGATT: 1", RETRIES);
+}
+
+bool MQTT_IsConnected(void) {
+	return SendAtCommandRetry("AT+CMQTTCONNECT?\r\n", "+CMQTTCONNECT: 0,0", RETRIES);
+}
+
+bool System_IsReady(void) {
+	return SIM_IsAlive() && SIM_IsSimReady() && SIM_IsNetworkRegistered()
+			&& SIM_IsDataAttached() && MQTT_IsConnected();
+}
+
+
 bool GPS_EnsureReady() {
 
 	// Check if GPS already enabled
@@ -235,7 +276,7 @@ bool WaitForGPSFix(uint32_t timeout_ms) {
 	uint32_t start = HAL_GetTick();
 
 	while ((HAL_GetTick() - start) < timeout_ms) {
-		if (SendAtCommandRetry("AT+CGPSINFO", "+CGPSINFO", 1)) {
+		if (SendAtCommandRetry("AT+CGPSINFO", "+CGPSINFO", RETRIES)) {
 			if (!bufferContains(sim_buffer, "+CGPSINFO: ,")) {
 				LOG_INFO("GPS Fix acquired");
 				return true;
@@ -302,11 +343,8 @@ GPSData parseGPS(char *buffer)
 	    if (latDir == 'S') latitude = -latitude;
 	    if (lonDir == 'W') longitude = -longitude;
 
-	    snprintf(gps.latitude, sizeof(gps.latitude), "%.6f", latitude);
-	    snprintf(gps.longitude, sizeof(gps.longitude), "%.6f", longitude);
-
-	    LOG_INFO("Latitude: %s", gps.latitude);
-	    LOG_INFO("Longitude: %s", gps.longitude);
+	snprintf(gps.latitude, sizeof(gps.latitude), "%.6f", latitude);
+	snprintf(gps.longitude, sizeof(gps.longitude), "%.6f", longitude);
 
 	    return gps;
 	}
@@ -449,7 +487,7 @@ bool MQTT_EnsureConnected(void) {
 	}
 
 	// Check MQTT connection
-	if (SendAtCommandRetry("AT+CMQTTCONNECT?", "+CMQTTCONNECT: 0", 1)) {
+	if (SendAtCommandRetry("AT+CMQTTCONNECT?", "+CMQTTCONNECT: 0,\"tcp://", 1)) {
 		LOG_INFO("MQTT already connected");
 		return true;
 	}
@@ -491,6 +529,7 @@ void publishGPS_over_MQTT(){
 	}
 	// Send topic text
 	SendRawText(MQTT_PUB_TOPIC);
+	HAL_Delay(100);
 	LOG_RX(sim_buffer);
 
 
@@ -503,10 +542,14 @@ void publishGPS_over_MQTT(){
 	}
 	// Send topic text
 	SendRawText(payload);
+	HAL_Delay(100);
 	LOG_RX(sim_buffer);
 
 	//Publish
-	SendAtCommandRetry("AT+CMQTTPUB=0,1,60", "OK", 3);
+	if (SendAtCommandRetry("AT+CMQTTPUB=0,1,60", "OK", 3)) {
+		LOG_INFO("Latitude: %s", gps.latitude);
+		LOG_INFO("Longitude: %s", gps.longitude);
+	}
 }
 
 
@@ -516,10 +559,10 @@ bool MQTT_EnsureSubscribed() {
 	char subCmd[64];
 
 	// Check if already subscribed
-	if (mqtt_subscribed) {
+	/*if (mqtt_subscribed) {
 		LOG_INFO("Already subscribed");
 		return true;
-	}
+	}*/
 
 	// Set topic
 	sprintf(subCmd, "AT+CMQTTSUBTOPIC=0,%d,1 \r\n", strlen(MQTT_SUB_TOPIC));
@@ -530,7 +573,8 @@ bool MQTT_EnsureSubscribed() {
 	}
 
 	// Send topic text
-	SendRawText(MQTT_SUB_TOPIC);
+	//SendRawText(MQTT_SUB_TOPIC);
+	SendAtCommand(MQTT_SUB_TOPIC, "OK");
 
 	// Subscribe
 	if (!SendAtCommandRetry("AT+CMQTTSUB=0", "OK", RETRIES)) {
@@ -548,7 +592,9 @@ bool MQTT_EnsureSubscribed() {
 bool checkCommand(char *text){
 	if (bufferContains(sim_buffer,"+CMQTTRX")) {
 		if (bufferContains( sim_buffer, text)){
-			LOG_INFO("Where Received \r\n");
+			 LOG_INFO("%s Received!\r\n", text);
+			 memset(sim_buffer, 0, RX_BUFFER_SIZE); //reset the buffer
+			 idx = 0;							   //reset the index
 			return true;
 		}else{
 			return false;

@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 #define LOG_ENABLE       1
-#define LOG_UART_ENABLE  1
+#define LOG_UART_ENABLE  0
 
 #if LOG_ENABLE
 

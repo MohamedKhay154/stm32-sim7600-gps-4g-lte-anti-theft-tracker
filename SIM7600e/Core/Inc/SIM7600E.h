@@ -109,6 +109,20 @@ bool SendAtCommandRetry(char *cmd, char *expected, uint8_t retries);
  */
 void SendRawText(char *cmd);
 
+/** @brief Checks if SIM module responds to AT commands. */
+bool SIM_IsAlive(void);
+
+/** @brief Checks if SIM module is registered to cellular network. */
+bool SIM_IsNetworkRegistered(void);
+
+/** @brief Checks if cellular data service is attached. */
+bool SIM_IsDataAttached(void);
+
+/** @brief Checks if MQTT client is connected to broker. */
+bool MQTT_IsConnected(void);
+
+/** @brief Checks if complete system communication stack is ready. */
+bool System_IsReady(void);
 
 
 /**
@@ -220,5 +234,7 @@ bool MQTT_EnsureSubscribed();
  */
 void publishGPS_over_MQTT();
 
+
+bool checkCommand(char *text);
 
 #endif /* INC_SIM7600E_H_ */

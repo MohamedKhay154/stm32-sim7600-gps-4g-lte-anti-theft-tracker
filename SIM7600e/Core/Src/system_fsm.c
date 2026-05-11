@@ -6,107 +6,114 @@
  */
 
 #include "system_fsm.h"
-#include "log.h"
-#include "SIM7600E.h"
-#include <string.h>
-#include <stdio.h>
 
-State_t current_state = STATE_INIT;
-State_t previous_state = STATE_INIT;
+
+State_t current_state = STATE_CONNECT;
+State_t previous_state = STATE_CONNECT;
 
 /* =============== WAIT state Entry / Exit =============== */
-void State_Init_Enter() {
-	LOG_INFO("Enter Init State");
+void State_Connect_Enter() {
+	LOG_INFO("Enter Connect State");
+
+	sysHealth_Timer_Stop();
 
 	// Ensure SIM module is powered
 	if (!SIM_EnsurePowered()) {
-		Transition_To(STATE_RECONNECT);
+		Transition_To(STATE_CONNECT);
 		return;
 	}
 
 	// Ensure GPS is ready
 	if (!GPS_EnsureReady()) {
-		Transition_To(STATE_RECONNECT);
+		Transition_To(STATE_CONNECT);
 		return;
 	}
 
 	// Ensure MQTT connection
 	if (!MQTT_EnsureConnected()) {
-		Transition_To(STATE_RECONNECT);
+		Transition_To(STATE_CONNECT);
 		return;
 	}
 
 	// Ensure MQTT subscription
 	if (!MQTT_EnsureSubscribed()) {
-		Transition_To(STATE_RECONNECT);
+		Transition_To(STATE_CONNECT);
 		return;
 	}
 
 	LOG_INFO("System Ready");
 
 	// Everything ready -> go idle
-	Transition_To(STATE_TRACKING);
+	Transition_To(STATE_IDLE);
 
 }
 
-void State_Init_Exit() {
-	//Power_ExitSleep();
-	//GPS_Wakeup();
-	LOG_INFO("EXIT Init State\r\n");
+void State_Connect_Exit() {
+	sysHealth_Timer_Start();
+	LOG_INFO("EXIT Connect State");
 }
 
-/* =============== TRACK state Entry / Exit =============== */
-void State_Tracking_Enter() {
+
+/* =============== IDLE state Entry / Exit =============== */
+void State_Idle_Enter() {
 	//GPS_Wakeup();
 	//MQTT_Connect();
 	//MQTT_SubscribeCommands();
 	//TrackTimer_Start(1);
-	LOG_INFO("Enter Tracking State\r\n");
+	LOG_INFO("Enter Idle State");
+}
+
+void State_Idle_Exit() {
+	//TrackTimer_Stop();
+	LOG_INFO("EXIT Idle State");
+
+}
+
+/* =============== TRACKING state Entry / Exit =============== */
+void State_Tracking_Enter() {
+	//GPS_Wakeup();
+	//MQTT_Connect();
+	//MQTT_SubscribeCommands();
+	Tracking_Timer_Start();
+	LOG_INFO("Enter Tracking State");
 }
 
 void State_Tracking_Exit() {
-	//TrackTimer_Stop();
-	LOG_INFO("EXIT Tracking State\r\n");
+	Tracking_Timer_Stop();
+	LOG_INFO("EXIT Tracking State");
 
 }
 /* =============== Park state Entry / Exit =============== */
 void State_Park_Enter() {
-	//GPS_Wakeup();
-	/*if (GPS_GetPosition(&last_lat, &last_lon)) {
-	 Geofence_SetCenter(last_lat, last_lon, park_radius_m);
-	 }*/
-	LOG_INFO("Enter Park State\r\n");
+	LOG_INFO("Enter Park State");
+	publishGPS_over_MQTT();
+
 }
 
 void State_Park_Exit() {
 	/* Nothing special for now */
-	LOG_INFO("EXIT Park State\r\n");
-}
-/* =============== Park state Entry / Exit =============== */
-void State_Reconnect_Enter() {
-	LOG_INFO("Enter RECONNECT State\r\n");
-	//WatchdogTimer_Stop();
-}
-void State_Reconnect_Exit() {
-	LOG_INFO("EXIT RECONNECT State\r\n");
-	//WatchdogTimer_Start();
+	LOG_INFO("EXIT Park State");
 }
 
 /* ================ Transition function =================== */
  void Transition_To(State_t new_state)
 {
-    if (current_state == new_state) {
+    if (current_state == new_state && current_state != STATE_CONNECT ) {
         return;   // prevent re-entering same state
     }
 	// If we are moving into RECONNECT, save previous state
-	if (new_state == STATE_RECONNECT) {
+	if (new_state == STATE_CONNECT) {
 		previous_state = current_state;
 	}
     /* ---- Exit old state ---- */
     switch (current_state) {
 
-    case STATE_INIT:
-        State_Init_Exit();
+    case STATE_CONNECT:
+        State_Connect_Exit();
+        break;
+
+    case STATE_IDLE:
+           State_Idle_Exit();
         break;
 
     case STATE_TRACKING:
@@ -116,9 +123,6 @@ void State_Reconnect_Exit() {
     case STATE_PARK:
         State_Park_Exit();
         break;
-    case STATE_RECONNECT:
-    	State_Reconnect_Exit();
-    	break;
 
     default:
         break;
@@ -129,9 +133,13 @@ void State_Reconnect_Exit() {
     /* ---- Enter new state ---- */
     switch (new_state) {
 
-    case STATE_INIT:
-        State_Init_Enter();
+    case STATE_CONNECT:
+        State_Connect_Enter();
         break;
+
+    case STATE_IDLE:
+         State_Idle_Enter();
+         break;
 
     case STATE_TRACKING:
         State_Tracking_Enter();
@@ -140,165 +148,108 @@ void State_Reconnect_Exit() {
     case STATE_PARK:
         State_Park_Enter();
         break;
-    case STATE_RECONNECT:
-    	State_Reconnect_Enter();
-    	break;
+
     default:
         break;
     }
 }
 
  /* ================ WAIT Handler =================== */
-  void State_Init_HandleEvent(Event_t ev)
+  void State_Connect_HandleEvent(Event_t ev)
  {
-     switch (ev) {
 
-     case EVENT_CMD_WHERE:
-
-         break;
-     case EVENT_CONNECTION_LOST:
-
-          break;
-
-     case EVENT_CMD_TRACK_ON:
-
-         break;
-
-     case EVENT_CMD_PARK_ON:
-
- 		break;
-
-     default:
-         break;
-     }
  }
+
+ /* ================ WAIT Handler =================== */
+void State_Idle_HandleEvent(Event_t ev) {
+	switch (ev) {
+
+	case EVENT_CMD_WHERE:
+		publishGPS_over_MQTT();
+		break;
+	case EVENT_CONNECTION_LOST:
+		Transition_To(STATE_CONNECT);
+		break;
+
+	case EVENT_CMD_TRACK_ON:
+		Transition_To(STATE_TRACKING);
+		break;
+
+	case EVENT_CMD_PARK_ON:
+		Transition_To(STATE_PARK);
+		break;
+
+	default:
+		break;
+	}
+}
  /* ================ Track Handler =================== */
-  void State_Tracking_HandleEvent(Event_t ev)
- {
-     switch (ev) {
+void State_Tracking_HandleEvent(Event_t ev) {
+	switch (ev) {
+	case EVENT_CMD_STOP:
+		Transition_To(STATE_IDLE);
+		break;
 
-     case EVENT_TRACK_TIMER:
+	case EVENT_TRACKING_TIMER:
+		publishGPS_over_MQTT();
+		break;
 
-         break;
+	case EVENT_CONNECTION_LOST:
+		Transition_To(STATE_CONNECT);
+		break;
 
-     case EVENT_CMD_WHERE:
-
-         break;
-
-     case EVENT_CMD_STOP:
-
- 		break;
- 	case EVENT_CONNECTION_LOST:
-
- 		break;
-
- 	case EVENT_CMD_PARK_ON:
-
- 		break;
-
-
-     default:
-         break;
-     }
- }
+	default:
+		break;
+	}
+}
  /* ================ PARK Handler =================== */
   void State_Park_HandleEvent(Event_t ev)
  {
      switch (ev) {
 
-     case EVENT_CMD_WHERE:
-
-         break;
-
      case EVENT_GEOFENCE_EXIT:
-
 
          break;
 
  	case EVENT_CONNECTION_LOST:
-
- 		break;
-
- 	 case EVENT_CMD_TRACK_ON:
-
+ 		Transition_To(STATE_CONNECT);
  		break;
 
      case EVENT_CMD_STOP:
-
+    	 Transition_To(STATE_IDLE);
          break;
 
      default:
          break;
      }
  }
-  /* ================ RECONNECT Handler =================== */
-  void State_Reconnect_HandleEvent(Event_t ev)
-  {
- 	switch (ev) {
 
- 	case EVENT_CONNECTION_LOST:
-
- 		break;
-
- 	default:
- 		break;  // ignore other events
- 	}
- }
  /* ================ Methods =================== */
 
- Event_t Event_Wait(){
+Event_t Event_Wait() {
 
-	 if(checkCommand("Where")){
-		 return EVENT_CMD_WHERE;
-	 }
+	if (checkCommand("Where")) {
+		return EVENT_CMD_WHERE;
+	}
+	if (checkCommand("track")) {
+		return EVENT_CMD_TRACK_ON;
+	}
+	if (checkCommand("stop")) {
+		return EVENT_CMD_STOP;
+	}
 
+	if (checkCommand("park")) {
+		return EVENT_CMD_PARK_ON;
+	}
+	if (Tracking_Timer_HasElapsed()) {
+		return EVENT_TRACKING_TIMER;
+	}
 
- 	/* Check connection first */
- 	/*if (sim_connection_lost) {
+	if (sysHealth_Timer_HasElapsed()) {
+		if(!System_IsReady)
+		return EVENT_CONNECTION_LOST;
+	}
 
- 		return EVENT_CONNECTION_LOST;
- 	}
-
- 	if (TrackTimer_EventPending()) {
- 	        return EVENT_TRACK_TIMER;
- 	    }
- 	if (WatchdogTimer_EventPending()) {
- 		if(!checkConnection()){
- 			return EVENT_CONNECTION_LOST;
- 		}
- 	}*/
- 	/* --- SIM commands --- */
- 	/*char* msg = CheckReceivedBuffer();
-
- 	if (msg != NULL) {
- 	    if (bufferContains(msg, "Where")) {
- 	        return EVENT_CMD_WHERE;
- 	    }
- 	    if (bufferContains(msg, "close")) {
- 	    	sim_connection_lost = true;
- 	        return EVENT_NONE;
- 	    }
- 		if (bufferContains(msg, "track")) {
- 			return EVENT_CMD_TRACK_ON;
- 		}
- 		if (bufferContains(msg, "stop")) {
- 			return EVENT_CMD_STOP;
- 		}
- 		if (bufferContains(msg, "park")) {
- 			return EVENT_CMD_PARK_ON;
- 		}
- 	}*/
-
- 	/* --- Buttons (optional, polling example) --- */
- 	/*
- 	 if (ButtonTrack_Pressed()) {
- 	 return EVENT_BTN_TRACK;
- 	 }
-
- 	 if (ButtonPark_Pressed()) {
- 	 return EVENT_BTN_PARK;
- 	 }
- 	 */
 
  	return EVENT_NONE;
  }
